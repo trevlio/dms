@@ -6,12 +6,70 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
+  id       Int    @id @default(autoincrement())
+  email    String @unique
+  password String
+  role     String
+}
+
+model Child {
+  id          Int          @id @default(autoincrement())
+  name        String
+  age         Int
+  parent      Parent       @relation(fields: [parentId], references: [id])
+  parentId    Int
+  attendances Attendance[]
+
+  @@index([parentId])
+}
+
+model Parent {
+  id             Int          @id @default(autoincrement())
+  name           String
+  contactInfo    String
+  emergencyInfo  String
+  children       Child[]
+  billingRecords Billing[]
+  Attendance     Attendance[]
+}
+
+model Staff {
+  id             Int          @id @default(autoincrement())
+  name           String
+  contactInfo    String
+  qualifications String
+  attendances    Attendance[]
+}
+
+model Attendance {
+  id       Int      @id @default(autoincrement())
+  date     DateTime
+  status   String
+  child    Child    @relation(fields: [childId], references: [id])
+  childId  Int
+  staff    Staff?   @relation(fields: [staffId], references: [id])
+  staffId  Int?
+  parent   Parent?  @relation(fields: [parentId], references: [id])
+  parentId Int?
+
+  @@index([childId])
+  @@index([staffId])
+  @@index([parentId])
+}
+
+model Billing {
+  id       Int      @id @default(autoincrement())
+  date     DateTime
+  amount   Int
+  status   String
+  parent   Parent   @relation(fields: [parentId], references: [id])
+  parentId Int
+
+  @@index([parentId])
 }
