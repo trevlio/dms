@@ -6,70 +6,286 @@ generator client {
 }
 
 datasource db {
-  provider     = "mysql"
-  url          = env("DATABASE_URL")
-  relationMode = "prisma"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
-  email    String @unique
-  password String
-  role     String
+  id             Int       @id @default(autoincrement())
+  firstName      String
+  lastName       String
+  email          String    @unique
+  password       String
+  roleId         Int?
+  role           Role?     @relation(fields: [roleId], references: [id])
+  phoneNumber    String?
+  profilePicture String?
+  creationDate   DateTime  @default(now())
+  lastLogin      DateTime?
+
+  // Relations
+  children       Child[] // Only needed if you want to reference children from the user
+  staffSchedules StaffSchedule[]
+  announcements  Announcement[]
+  evaluations    PerformanceEvaluation[]
+  Organization   Organization?           @relation(fields: [organizationId], references: [id])
+  organizationId Int?
+
+  @@map("Users")
+}
+
+model Classroom {
+  id           Int      @id @default(autoincrement())
+  name         String
+  capacity     Int
+  description  String?
+  creationDate DateTime @default(now())
+
+  // Relations
+  children       Child[]
+  staffSchedules StaffSchedule[]
+  activities     Activity[]
+  Organization   Organization?   @relation(fields: [organizationId], references: [id])
+  organizationId Int?
+
+  @@map("Classrooms")
 }
 
 model Child {
-  id          Int          @id @default(autoincrement())
-  name        String
-  age         Int
-  parent      Parent       @relation(fields: [parentId], references: [id])
-  parentId    Int
-  attendances Attendance[]
+  id                 Int      @id @default(autoincrement())
+  firstName          String
+  lastName           String
+  birthDate          DateTime
+  parentId           Int
+  classroomId        Int
+  enrollmentDate     DateTime
+  medicalInformation String?
+  emergencyContact   String
+  photo              String?
 
-  @@index([parentId])
+  // Relations
+  parent            User               @relation(fields: [parentId], references: [id])
+  classroom         Classroom          @relation(fields: [classroomId], references: [id])
+  attendanceRecords Attendance[]
+  activities        Activity[]
+  Invoice           Invoice[]
+  Allergy           Allergy[]
+  MedicalCondition  MedicalCondition[]
+  Immunization      Immunization[]
+  EmergencyContact  EmergencyContact[]
+
+  @@map("Children")
 }
 
-model Parent {
-  id             Int          @id @default(autoincrement())
-  name           String
-  contactInfo    String
-  emergencyInfo  String
-  children       Child[]
-  billingRecords Billing[]
-  Attendance     Attendance[]
+model StaffSchedule {
+  id          Int      @id @default(autoincrement())
+  staffId     Int
+  classroomId Int
+  startTime   DateTime
+  endTime     DateTime
+  date        DateTime
+  role        String
+
+  // Relations
+  staff     User      @relation(fields: [staffId], references: [id])
+  classroom Classroom @relation(fields: [classroomId], references: [id])
+
+  @@map("Staff_Schedule")
 }
 
-model Staff {
-  id             Int          @id @default(autoincrement())
-  name           String
-  contactInfo    String
-  qualifications String
-  attendances    Attendance[]
+model Invoice {
+  id           Int      @id @default(autoincrement())
+  childId      Int
+  amount       Float
+  dueDate      DateTime
+  status       String
+  creationDate DateTime @default(now())
+
+  // Relations
+  child        Child         @relation(fields: [childId], references: [id])
+  transactions Transaction[]
+
+  @@map("Invoices")
+}
+
+model Transaction {
+  id            Int      @id @default(autoincrement())
+  invoiceId     Int
+  paymentMethod String
+  amount        Float
+  date          DateTime
+
+  // Relations
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
+
+  @@map("Transactions")
+}
+
+model LessonPlan {
+  id                 Int      @id @default(autoincrement())
+  title              String
+  description        String?
+  startDate          DateTime
+  endDate            DateTime
+  materials          String?
+  objectives         String?
+  assessmentCriteria String?
+
+  // Relations
+  activities Activity[]
+
+  @@map("Lesson_Plans")
+}
+
+model Activity {
+  id          Int      @id @default(autoincrement())
+  lessonId    Int?
+  classroomId Int
+  childId     Int?
+  title       String
+  description String?
+  date        DateTime
+  startTime   DateTime
+  endTime     DateTime
+
+  // Relations
+  lesson    LessonPlan? @relation(fields: [lessonId], references: [id])
+  classroom Classroom   @relation(fields: [classroomId], references: [id])
+  child     Child?      @relation(fields: [childId], references: [id])
+
+  @@map("Activities")
+}
+
+model Announcement {
+  id           Int      @id @default(autoincrement())
+  title        String
+  content      String
+  authorId     Int
+  creationDate DateTime @default(now())
+
+  // Relations
+  author User @relation(fields: [authorId], references: [id])
+
+  @@map("Announcements")
 }
 
 model Attendance {
-  id       Int      @id @default(autoincrement())
-  date     DateTime
-  status   String
-  child    Child    @relation(fields: [childId], references: [id])
-  childId  Int
-  staff    Staff?   @relation(fields: [staffId], references: [id])
-  staffId  Int?
-  parent   Parent?  @relation(fields: [parentId], references: [id])
-  parentId Int?
+  id      Int      @id @default(autoincrement())
+  childId Int
+  date    DateTime
+  status  String
 
-  @@index([childId])
-  @@index([staffId])
-  @@index([parentId])
+  // Relations
+  child Child @relation(fields: [childId], references: [id])
+
+  @@map("Attendance")
 }
 
-model Billing {
-  id       Int      @id @default(autoincrement())
-  date     DateTime
-  amount   Int
-  status   String
-  parent   Parent   @relation(fields: [parentId], references: [id])
-  parentId Int
+model PerformanceEvaluation {
+  id      Int      @id @default(autoincrement())
+  staffId Int
+  title   String
+  content String
+  date    DateTime
+  score   Int
 
-  @@index([parentId])
+  // Relations
+  staff User @relation(fields: [staffId], references: [id])
+
+  @@map("Performance_Evaluations")
+}
+
+model Organization {
+  id          Int     @id @default(autoincrement())
+  name        String
+  logo        String?
+  language    String  @default("en")
+  timezone    String  @default("UTC")
+  customTheme String?
+
+  // Relations
+  users       User[]
+  classrooms  Classroom[]
+  Integration Integration[]
+
+  @@map("Organizations")
+}
+
+model Role {
+  id          Int          @id @default(autoincrement())
+  name        String
+  permissions Permission[] @relation("RolePermissions")
+  User        User[]
+
+  @@map("Roles")
+}
+
+model Permission {
+  id    Int    @id @default(autoincrement())
+  name  String
+  roles Role[] @relation("RolePermissions")
+
+  @@map("Permissions")
+}
+
+model Integration {
+  id              Int    @id @default(autoincrement())
+  organizationId  Int
+  integrationType String
+  apiKey          String
+  configuration   Json
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("Integrations")
+}
+
+model Allergy {
+  id          Int    @id @default(autoincrement())
+  childId     Int
+  type        String
+  description String
+
+  // Relations
+  child Child @relation(fields: [childId], references: [id])
+
+  @@map("Allergies")
+}
+
+model MedicalCondition {
+  id          Int    @id @default(autoincrement())
+  childId     Int
+  name        String
+  description String
+
+  // Relations
+  child Child @relation(fields: [childId], references: [id])
+
+  @@map("Medical_Conditions")
+}
+
+model Immunization {
+  id      Int      @id @default(autoincrement())
+  childId Int
+  name    String
+  date    DateTime
+
+  // Relations
+  child Child @relation(fields: [childId], references: [id])
+
+  @@map("Immunizations")
+}
+
+model EmergencyContact {
+  id           Int    @id @default(autoincrement())
+  childId      Int
+  name         String
+  relationship String
+  phone        String
+
+  // Relations
+  child Child @relation(fields: [childId], references: [id])
+
+  @@map("Emergency_Contacts")
 }
