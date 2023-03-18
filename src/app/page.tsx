@@ -1,15 +1,8 @@
 export default function Home() {
   return (
     <div>
-      <h1>Hello World</h1>
-
-      <h4>This is a test</h4>
-      <h4>This is a test</h4>
-      <h4>This is a test 2</h4>
-      <h4>This is a test 3</h4>
-      <h4>This is a test 4</h4>
-      <h4>This is a test 5</h4>
-      <h4>This is a test 6</h4>
+       <h1 className="p-6">My name is Josh</h1>
+       <h1>I like puppies!</h1>
     </div>
   );
 }
