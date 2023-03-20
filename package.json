@@ -10,6 +10,7 @@
     "test": "npx playwright test"
   },
   "dependencies": {
+    "@clerk/nextjs": "^4.11.11",
     "@prisma/client": "^4.11.0",
     "@types/node": "18.14.6",
     "@types/react": "18.0.28",

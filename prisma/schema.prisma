@@ -11,7 +11,7 @@ datasource db {
 }
 
 model User {
-  id             Int       @id @default(autoincrement())
+  id             String    @id
   firstName      String
   lastName       String
   email          String    @unique
@@ -56,7 +56,7 @@ model Child {
   firstName          String
   lastName           String
   birthDate          DateTime
-  parentId           Int
+  parentId           String
   classroomId        Int
   enrollmentDate     DateTime
   medicalInformation String?
@@ -79,7 +79,7 @@ model Child {
 
 model StaffSchedule {
   id          Int      @id @default(autoincrement())
-  staffId     Int
+  staffId     String
   classroomId Int
   startTime   DateTime
   endTime     DateTime
@@ -160,7 +160,7 @@ model Announcement {
   id           Int      @id @default(autoincrement())
   title        String
   content      String
-  authorId     Int
+  authorId     String
   creationDate DateTime @default(now())
 
   // Relations
@@ -183,7 +183,7 @@ model Attendance {
 
 model PerformanceEvaluation {
   id      Int      @id @default(autoincrement())
-  staffId Int
+  staffId String
   title   String
   content String
   date    DateTime
