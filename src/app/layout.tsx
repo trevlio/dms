@@ -1,5 +1,6 @@
 import './globals.css';
 import React from 'react';
+import AppShell from './components/AppShell/AppShell';
 
 export const metadata = {
   title: 'Create Next App',
@@ -8,8 +9,10 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" className="h-full bg-gray-100">
+      <body className="h-full">
+        <AppShell>{children}</AppShell>
+      </body>
     </html>
   );
 }
